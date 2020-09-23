@@ -115,8 +115,6 @@ void create(char *commandLine){
 	switch(dataType){
 		case LIST:
 			createList(name);
-			
-
 			break;
 		case HASH:
 
@@ -129,6 +127,33 @@ void create(char *commandLine){
 	}
 }
 
+void delete(char* commandLine){
+	fgets(commandLine, MAX_CMD_LINE, stdin);
+
+	char name[50], buffer[50];
+	int argc = sscanf(commandLine, "%s %s", name, buffer);
+
+	if(argc > 1){
+		printf("ERROR : TOO MUCH ARGUMENT. JUST TYPE THE NAME WITHOUT WHITSPACE\n");
+		return;
+	}
+	
+	struct namedList* currList = headList->next;
+	while(!currList){
+		if(!strcmp(currList->name, name)){
+			// delete that list
+			// TODO : HERE 
+
+			return;
+		}
+	}
+
+	/* Check hash and bitmap also if there is name which is matched to input */
+
+	printf("MESSAGE : NO MATCHED NAME FOUND\n");
+	return;
+	
+}
 
 void parser(){
 	char commandLine[MAX_CMD_LINE];
@@ -140,7 +165,7 @@ void parser(){
 				create(commandLine);
 				break;
 			case DELETE: 
-
+				delete(commandLine);
 				break;
 			case DUMPDATA:
 
