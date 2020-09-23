@@ -86,6 +86,8 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#define MAX_LIST_NAME 50
+
 /* List element. */
 struct list_elem 
   {
@@ -99,6 +101,17 @@ struct list
     struct list_elem head;      /* List head. */
     struct list_elem tail;      /* List tail. */
   };
+
+
+/* ======= newely inserted =====*/
+/* List pointer with name. */
+struct namedList
+{
+	struct list* item;
+	char name[MAX_LIST_NAME];
+	struct namedList* next;
+
+};
 
 /* List item for accessing data*/
 struct list_item
