@@ -11,12 +11,46 @@
 #include "list.h"
 
 #define MAX_CMD_LINE 50
+#define MAX_ELEMENT 11
 
 /* decide what kind of the command is.
    "OTHERS" means it is data structure dependent command */
 typedef enum {CREATE, DELETE, DUMPDATA, QUIT, OTHERS} COMMAND;
 
-struct namedList* headList;
+struct namedList listPool[MAX_ELEMENT];
+
+typedef enum {
+	LIST_FRONT = 0, LIST_BACK, LIST_PUSH_FRONT, LIST_PUSH_BACK, LIST_POP_FRONT, LIST_POP_BACK,
+	LIST_INSERT, LIST_INSERT_ORDERED, LIST_EMPTY, LIST_SIZE, LIST_MAX, LIST_MIN,
+	LIST_REMOVE, LIST_REVERSE, LIST_SORT, LIST_SPLICE, LIST_SWAP, LIST_UNIQUE
+
+}FUNCTION;
+
+char* functionNameList[] = {
+	"list_front", "list_back", "list_push_front", "list_push_back", "list_pop_front", "lsit_pop_back",
+	"list_insert", "list_insert_ordered", "list_empty", "list_size", "list_max", "list_min",
+	"list_remove", "list_reverse", "list_sort", "list_splice", "list_swap", "list_unique"
+};
+FUNCTION getFunction(char* functionName){
+	for(int i=0;i<18;i++){
+		if(!strcmp(functionName, functionNameList[i])) return i;
+
+		
+	}
+	return -1;
+}
+
+
+
+int getEmptyList(){
+	for(int i=0;i<MAX_ELEMENT;i++){
+		if(!listPool[i].item) {
+			listPool[i].item = (struct list*)malloc(sizeof(struct list));
+			return i;
+		}
+	}
+	return -1;
+}
 
 COMMAND getCommand(char *command){
 	char* w = command;
@@ -36,34 +70,12 @@ COMMAND getCommand(char *command){
 typedef enum {NONE, LIST, HASH, BITMAP} DATATYPE;
 
 void createList(char* name){
-	if(headList->next == NULL){
-		struct namedList* newList = (struct namedList*)malloc(sizeof(struct namedList));
-		strcpy(newList->name, name);
-		newList->next = NULL;
-		newList->item = (struct list*)malloc(sizeof(struct list));
-		list_init(newList->item);
+	int listIndex = getEmptyList();
+	if(listIndex<0) return;
 
-		headList->next = newList;
-		return;
-	}
+	strcpy(listPool[listIndex].name, name);
+	list_init(listPool[listIndex].item);
 
-	struct namedList* curr = headList->next;
-	
-	while(!(curr->next)){
-		if(!strcmp(curr->name, name)){
-			printf("ERROR : ALREADY EXISTING NAME.\n");
-			return;
-		}
-		curr = curr->next;
-	}
-
-	struct namedList* newList = (struct namedList*)malloc(sizeof(struct namedList));
-	strcpy(newList->name, name);
-	newList->next = NULL;
-	newList->item = (struct list*)malloc(sizeof(struct list));
-	list_init(newList->item);
-
-	curr->next = newList;
 }
 
 
@@ -82,6 +94,82 @@ char *trimWhiteSpace(char *str){
 	return str;
 }
 
+void execute(char* commandLine){
+	char* w = commandLine;
+	char c;
+
+	while((c = getchar()) != '\n' && c != EOF && c != ' '){
+		*w++ = c;
+		*w = '\0';
+	}
+	getchar();
+	int function = getFunction(commandLine);
+	if(function<0) return;
+
+	switch(function){
+		case LIST_FRONT:
+
+			break;
+		case LIST_BACK:
+
+			break;
+		case LIST_PUSH_FRONT:
+
+			break;
+		case LIST_PUSH_BACK:
+
+			break;
+		case LIST_POP_FRONT:
+
+			break;
+		case LIST_POP_BACK:
+
+			break;
+		case LIST_INSERT:
+
+			break;
+		case LIST_INSERT_ORDERED:
+			
+			break;
+		case LIST_EMPTY:
+
+			break;
+		case LIST_SIZE:
+
+			break;
+		case LIST_MAX:
+
+			break;
+		case LIST_MIN:
+
+			break;
+		case LIST_REMOVE:
+
+			break;
+		case LIST_REVERSE:
+
+			break;
+		case LIST_SORT:
+
+			break;
+		case LIST_SPLICE:
+
+			break;
+		case LIST_SWAP:
+
+			break;
+		case LIST_UNIQUE:
+
+			break;
+
+		default:
+			break;
+	}
+
+	
+
+
+}
 
 void create(char *commandLine){
 	char* w = commandLine;
@@ -127,6 +215,23 @@ void create(char *commandLine){
 	}
 }
 
+int deleteList(char* name){
+	int index = -1;
+
+	for(int i=0;i<MAX_ELEMENT;i++){
+		if(!strcmp(name,listPool[i].name)) {
+			index = i;
+			break;
+		}
+	}
+
+	if(index>=0){
+		free(listPool[index].item);
+	}
+
+	return index;
+}
+
 void delete(char* commandLine){
 	fgets(commandLine, MAX_CMD_LINE, stdin);
 
@@ -137,29 +242,24 @@ void delete(char* commandLine){
 		printf("ERROR : TOO MUCH ARGUMENT. JUST TYPE THE NAME WITHOUT WHITSPACE\n");
 		return;
 	}
+
+	if(deleteList(name)>-1) return;
 	
-	struct namedList* currList = headList->next;
-	while(!currList){
-		if(!strcmp(currList->name, name)){
-			// delete that list
-			// TODO : HERE 
 
-			return;
-		}
-	}
-
-	/* Check hash and bitmap also if there is name which is matched to input */
 
 	printf("MESSAGE : NO MATCHED NAME FOUND\n");
 	return;
 	
 }
 
+
 void parser(){
 	char commandLine[MAX_CMD_LINE];
 	while(true){
+		printf("command>> ");
 		COMMAND command = getCommand(commandLine);
 		getchar();
+
 		switch(command){
 			case CREATE:
 				create(commandLine);
@@ -173,7 +273,7 @@ void parser(){
 			case QUIT:
 				return;
 			case OTHERS:
-
+				execute(commandLine);
 				break;
 			default:
 				break;
@@ -186,18 +286,21 @@ void parser(){
 
 
 void init(){
-	headList = (struct namedList*)malloc(sizeof(struct namedList));
-	headList->item = NULL;
-	strcpy(headList->name,"__HEADLIST__");
-	headList->next = NULL;
 
 }
 
-
+void freeData(){
+	for(int i=0;i<MAX_ELEMENT;i++){
+		if(!listPool[i].item) free(listPool[i].item);
+	}
+}
 
 int main(int argc, char *argv[]){
 	init();
+
 	parser();
+
+	freeData();
 	return 0;
 
 }

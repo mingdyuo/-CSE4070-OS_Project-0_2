@@ -537,7 +537,13 @@ list_min (struct list *list, list_less_func *less, void *aux)
 /* Returns none. Changes position of two node in a list */
 void list_swap(struct list_elem *a, struct list_elem *b)
 {
+	struct list_elem *temp_a = a;
 
+	*a->prev = *b->prev;
+	*a->next = *b->next;
+
+	*b->prev = *temp_a->prev;
+	*b->next = *temp_a->next;
 }
 
 /* Returns none. Shuffles positions of nodes in a list randomly. */

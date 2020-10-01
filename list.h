@@ -109,8 +109,6 @@ struct namedList
 {
 	struct list* item;
 	char name[MAX_LIST_NAME];
-	struct namedList* next;
-
 };
 
 /* List item for accessing data*/
