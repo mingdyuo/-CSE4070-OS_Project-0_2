@@ -19,21 +19,36 @@
 typedef enum {CREATE, DELETE, DUMPDATA, QUIT, OTHERS} COMMAND;
 
 struct namedList listPool[MAX_ELEMENT];
-struct hash *hashPool[MAX_ELEMENT];
+struct namedHash hashPool[MAX_ELEMENT];
 
 typedef enum {
+	// List funcions
 	LIST_FRONT = 0, LIST_BACK, LIST_PUSH_FRONT, LIST_PUSH_BACK, LIST_POP_FRONT, 
 	LIST_POP_BACK, LIST_INSERT, LIST_INSERT_ORDERED, LIST_EMPTY, LIST_SIZE,
 	LIST_MAX, LIST_MIN,	LIST_REMOVE, LIST_REVERSE, LIST_SORT,
-	LIST_SPLICE, LIST_SWAP, LIST_SHUFFLE, LIST_UNIQUE
-
+	LIST_SPLICE, LIST_SWAP, LIST_SHUFFLE, LIST_UNIQUE,
+	// Hash functions
+	HASH_INSERT, HASH_APPLY, HASH_DELETE, HASH_EMPTY, HASH_SIZE,
+	HASH_CLEAR, HASH_FIND, HASH_REPLACE,
+	// Bitmap functions
+	BITMAP_MARK, BITMAP_ALL, BITMAP_ANY, BITMAP_CONTAINS, BITMAP_COUNT,
+	BITMAP_EXPAND, BITMAP_SET_ALL, BITMAP_FLIP, BITMAP_NONE, BITMAP_RESET,
+	BITMAP_SCAN_AND_FLIP, BITMAP_SCAN, BITMAP_SET, BITMAP_SET_MULTIPLE, BITMAP_TEST
 }FUNCTION;
 
 char* functionNameList[] = {
+	// List functions
 	"list_front", "list_back", "list_push_front", "list_push_back", "list_pop_front", 
 	"list_pop_back", "list_insert", "list_insert_ordered", "list_empty", "list_size", 
 	"list_max", "list_min",	"list_remove", "list_reverse", "list_sort", 
-	"list_splice", "list_swap", "list_shuffle",	"list_unique"
+	"list_splice", "list_swap", "list_shuffle",	"list_unique",
+	// Hash functions
+	"hash_insert", "hash_apply", "hash_delete", "hash_empty", "hash_size",
+	"hash_clear", "hash_find", "hash_replace",
+	// Bitmap functions
+	"bitmap_mark", "bitmap_all", "bitmap_any", "bitmap_contains", "bitmap_count",
+	"bitmap_expand", "bitmap_set_all", "bitmap_flip", "bitmap_none", "bitmap_reset",
+	"bitmap_scan_and_flip", "bitmap_scan", "bitmap_set", "bitmap_set_multiple", "bitmap_test"
 };
 
 FUNCTION getFunction(char* functionName){
@@ -114,13 +129,20 @@ bool getNameOnly(char* commandLine){
 	return true;
 }
 
-int getMatchingList(char* commandLine){
+
+int getMatchingList(char* name){
 	for(int i=0;i<MAX_ELEMENT;i++){
-		if(!strcmp(commandLine, listPool[i].name)) return i;
+		if(!strcmp(name, listPool[i].name)) return i;
 	}
 	return -1;
 }
 
+int getMatchingHash(char* name){
+	for(int i=0;i<MAX_ELEMENT;i++){
+		if(!strcmp(name, hashPool[i].name)) return i;
+	}
+	return -1;
+}
 
 void func_list_front(char* commandLine){
 	if(!getNameOnly(commandLine)) return;
@@ -446,11 +468,33 @@ void func_list_shuffle(char* commandLine){
 
 }
 
+void func_hash_insert(char* commandLine){
+	int value;
+	fgets(commandLine, MAX_CMD_LINE, stdin);
+
+	char name[50], buffer[50];
+	int argc = sscanf(commandLine, "%s %d %s", name, &value, buffer);
+	
+	if(argc>2){
+		printf("ERROR : TOO MUCH ARGUMENT.\n");
+		return;
+	}
+	
+	int index = getMatchingHash(name);
+	if(index > -1) return;
+
+	struct hash_item* new_item = (struct hash_item*)malloc(sizeof(struct hash_item));
+	new_item->data = value;
+	hash_insert(hashPool[index].item, &(new_item->elem));
+
+}
+
 void execute(char* commandLine){
 	int function = getFunction(commandLine);
 	if(function<0) return;
 
 	switch(function){
+		/* LIST COMMANDS */
 		case LIST_FRONT:
 			func_list_front(commandLine);
 			break;
@@ -508,7 +552,77 @@ void execute(char* commandLine){
 		case LIST_UNIQUE:
 			func_list_unique(commandLine);
 			break;
+		/* HASH COMMANDS */
+		case HASH_INSERT:
+			func_hash_insert(commandLine);
+			break;
+		case HASH_APPLY:
+			
+			break;
+		case HASH_DELETE:
 
+			break;
+		case HASH_EMPTY:
+
+			break;
+		case HASH_SIZE:
+
+			break;
+		case HASH_CLEAR:
+
+			break;
+		case HASH_FIND:
+			
+			break;
+		case HASH_REPLACE:
+
+			break;
+		/* BITMAP COMMANDS */
+		case BITMAP_MARK:
+
+			break;
+		case BITMAP_ALL:
+
+			break;
+		case BITMAP_ANY:
+
+			break;
+		case BITMAP_CONTAINS:
+
+			break;
+		case BITMAP_COUNT:
+
+			break;
+		case BITMAP_EXPAND:
+
+			break;
+		case BITMAP_SET_ALL:
+
+			break;
+		case BITMAP_FLIP:
+
+			break;
+		case BITMAP_NONE:
+
+			break;
+		case BITMAP_RESET:
+
+			break;
+		case BITMAP_SCAN_AND_FLIP:
+
+			break;
+		case BITMAP_SCAN:
+
+			break;
+		case BITMAP_SET:
+
+			break;
+		case BITMAP_SET_MULTIPLE:
+
+			break;
+		case BITMAP_TEST:
+
+			break;
 		default:
 			break;
 	}
@@ -529,8 +643,9 @@ void createHash(char* name){
 	int hashIndex = getEmptyList();
 	if(hashIndex<0) return;
 	
-	hashPool[hashIndex] = (struct hash*)malloc(sizeof(struct hash));
-	hash_init(hashPool[hashIndex], my_hash_func, my_hash_less_func, NULL);
+	strcpy(hashPool[hashIndex].name, name);
+	hashPool[hashIndex].item = (struct hash*)malloc(sizeof(struct hash));
+	hash_init(hashPool[hashIndex].item, my_hash_func, my_hash_less_func, NULL);
 
 }
 
@@ -579,6 +694,7 @@ void create(char *commandLine){
 	}
 }
 
+
 int deleteList(char* name){
 	int index = -1;
 
@@ -607,6 +723,36 @@ int deleteList(char* name){
 	return index;
 }
 
+int deleteHash(char* name){
+	int index = -1;
+
+	for(int i=0;i<MAX_ELEMENT;i++){
+		if(!strcmp(name,hashPool[i].name)) {
+			index = i;
+			break;
+		}
+	}
+
+	if(index>=0){
+		strcpy(hashPool[index].name, "\0");
+// TODO : 여기 해야 함!!!
+		/*
+		struct list_elem* e = list_begin(listPool[index].item);
+		while(e != list_end(listPool[index].item)){
+			struct list_item* del = list_entry(e, struct list_item, elem);
+			e = list_remove(e);
+			free(del);
+			del = NULL;
+		}
+		*/
+		
+		free(hashPool[index].item);
+		hashPool[index].item = NULL;
+	}
+
+	return index;
+}
+
 void delete(char* commandLine){
 	fgets(commandLine, MAX_CMD_LINE, stdin);
 
@@ -616,10 +762,12 @@ void delete(char* commandLine){
 	if(argc > 1){
 		printf("ERROR : TOO MUCH ARGUMENT. JUST TYPE THE NAME WITHOUT WHITSPACE\n");
 		return;
+		free(hashPool[i].item);
 	}
 
 	if(deleteList(name)>-1) return;
 	
+	if(deleteHash(name)>-1) return;
 
 
 	printf("MESSAGE : NO MATCHED NAME FOUND\n");
@@ -692,7 +840,8 @@ void init(){
 		listPool[i].item = NULL;
 		strcpy(listPool[i].name, "\0");
 
-		hashPool[i] = NULL;
+		hashPool[i].item = NULL;
+		strcpy(hashPool[i].name, "\0");
 	}
 	
 }
@@ -713,7 +862,8 @@ void freeData(){
 
 		if(hashPool[i]){
 			// TODO : free hashPool;
-			hashPool[i] = NULL;
+			free(hashPool[i].item);
+			hashPool[i].item = NULL;
 		}
 	}
 }

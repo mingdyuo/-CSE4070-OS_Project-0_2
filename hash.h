@@ -24,6 +24,9 @@
 #include <stddef.h>
 #include <stdint.h>
 #include "list.h"
+#include "common.h"
+
+#define MAX_HASH_NAME 50
 
 /* Hash element. */
 struct hash_elem 
@@ -38,6 +41,12 @@ struct hash_item
 	struct hash_elem elem;
 	int data;
 };
+
+struct namedHash
+{
+	struct hash* item;
+	char name[MAX_HASH_NAME];
+}
 /* Converts pointer to hash element HASH_ELEM into a pointer to
    the structure that HASH_ELEM is embedded inside.  Supply the
    name of the outer structure STRUCT and the member name MEMBER
