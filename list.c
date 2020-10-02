@@ -1,11 +1,15 @@
 #include "list.h"
 #include <assert.h>	// Instead of	#include "../debug.h"
+#include <time.h>
+#include <stdlib.h>
 #define ASSERT(CONDITION) assert(CONDITION)	// patched for proj0-2
 
 /* Our doubly linked lists have two header elements: the "head"
    just before the first element and the "tail" just after the
    last element.  The `prev' link of the front header is null, as
-   is the `next' link of the back header.  Their other two links
+   ime(NULL));  
+    int temp;
+    int rn;s the `next' link of the back header.  Their other two links
    point toward each other via the interior elements of the list.
 
    An empty list looks like this:
@@ -537,19 +541,37 @@ list_min (struct list *list, list_less_func *less, void *aux)
 /* Returns none. Changes position of two node in a list */
 void list_swap(struct list_elem *a, struct list_elem *b)
 {
-	struct list_elem *temp_a = a;
+	int temp;
+	struct list_item* item_a = list_entry(a, struct list_item, elem);
+	struct list_item* item_b = list_entry(b, struct list_item, elem);
+	
+	temp = item_a->data;
+	item_a->data = item_b->data;
+	item_b->data = temp;
 
-	*a->prev = *b->prev;
-	*a->next = *b->next;
-
-	*b->prev = *temp_a->prev;
-	*b->next = *temp_a->next;
 }
 
 /* Returns none. Shuffles positions of nodes in a list randomly. */
 void list_shuffle(struct list *list)
 {
-
+	srand(time(NULL));
+	int temp, rn;
+	size_t size = list_size(list);
+	for(int i=0; i<size;i++){
+		rn = rand() % size;
+		
+		
+	}
 }
 
+bool my_list_less_func(const struct list_elem *elem, const struct list_elem* e, void *aux){
+	struct list_item* new_val = list_entry(elem, struct list_item, elem);
+	struct list_item* check_val = list_entry(e, struct list_item, elem);
 
+	return new_val->data < check_val->data;
+}
+/*
+list_less_func get_list_less(){
+	return my_list_less_func;
+}
+*/

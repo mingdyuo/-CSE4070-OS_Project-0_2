@@ -20,16 +20,18 @@ typedef enum {CREATE, DELETE, DUMPDATA, QUIT, OTHERS} COMMAND;
 struct namedList listPool[MAX_ELEMENT];
 
 typedef enum {
-	LIST_FRONT = 0, LIST_BACK, LIST_PUSH_FRONT, LIST_PUSH_BACK, LIST_POP_FRONT, LIST_POP_BACK,
-	LIST_INSERT, LIST_INSERT_ORDERED, LIST_EMPTY, LIST_SIZE, LIST_MAX, LIST_MIN,
-	LIST_REMOVE, LIST_REVERSE, LIST_SORT, LIST_SPLICE, LIST_SWAP, LIST_UNIQUE
+	LIST_FRONT = 0, LIST_BACK, LIST_PUSH_FRONT, LIST_PUSH_BACK, LIST_POP_FRONT, 
+	LIST_POP_BACK, LIST_INSERT, LIST_INSERT_ORDERED, LIST_EMPTY, LIST_SIZE,
+	LIST_MAX, LIST_MIN,	LIST_REMOVE, LIST_REVERSE, LIST_SORT,
+	LIST_SPLICE, LIST_SWAP, LIST_SHUFFLE, LIST_UNIQUE
 
 }FUNCTION;
 
 char* functionNameList[] = {
-	"list_front", "list_back", "list_push_front", "list_push_back", "list_pop_front", "lsit_pop_back",
-	"list_insert", "list_insert_ordered", "list_empty", "list_size", "list_max", "list_min",
-	"list_remove", "list_reverse", "list_sort", "list_splice", "list_swap", "list_unique"
+	"list_front", "list_back", "list_push_front", "list_push_back", "list_pop_front", 
+	"list_pop_back", "list_insert", "list_insert_ordered", "list_empty", "list_size", 
+	"list_max", "list_min",	"list_remove", "list_reverse", "list_sort", 
+	"list_splice", "list_swap", "list_shuffle",	"list_unique"
 };
 
 FUNCTION getFunction(char* functionName){
@@ -100,8 +102,6 @@ bool getNameOnly(char* commandLine){
 	char name[50], buffer[50];
 	int argc = sscanf(commandLine, "%s %s", name, buffer);
 	
-
-	printf("name : [%s]\n",name);
 	if(argc>1){
 		printf("ERROR : TOO MUCH ARGUMENT. JUST TYPE NAME WITHOUT WHITESPACE\n");
 		return false;
@@ -152,6 +152,8 @@ void func_list_push_front(char* commandLine){
 	int argc = sscanf(commandLine, "%s %d %s", name, &value, buffer);
 	
 	if(argc>2){
+
+
 		printf("ERROR : TOO MUCH ARGUMENT.(list_push_front) \n");
 		return;
 	}
@@ -228,10 +230,12 @@ void func_list_insert(char* commandLine){
 	int listIndex = getMatchingList(name);
 	if(listIndex < 0) return;
 	
+
+
 	struct list_item* new_item = (struct list_item*)malloc(sizeof(struct list_item));
 	new_item->data = value;
 
-	struct list_elem* curr = list_head(listPool[listIndex].item);
+	struct list_elem* curr = list_begin(listPool[listIndex].item);
 	for(int i = 0; i < position; ++i){
 		curr = curr->next;	
 	}
@@ -240,12 +244,6 @@ void func_list_insert(char* commandLine){
 
 }
 
-bool less_func(struct list_elem *elem, struct list_elem* e){
-	struct list_item* new_val = list_entry(elem, struct list_item, elem);
-	struct list_item* check_val = list_entry(e, struct list_item, elem);
-
-	return new_val->data <= check_val->data;
-}
 
 void func_list_insert_ordered(char* commandLine){
 	int value;
@@ -265,8 +263,7 @@ void func_list_insert_ordered(char* commandLine){
 	struct list_item* new_item = (struct list_item*)malloc(sizeof(struct list_item));
 	new_item->data = value;
 	
-// TODO : less_func  적용	
-	//list_insert_ordered(listPool[listIndex].item, &(new_item->elem), less_func);
+	list_insert_ordered(listPool[listIndex].item, &(new_item->elem), my_list_less_func, 0);
 }
 
 void func_list_empty(char* commandLine){
@@ -288,7 +285,7 @@ void func_list_size(char* commandLine){
 	if(listIndex < 0) return;
 	
 	size_t listSize = list_size(listPool[listIndex].item);
-	printf("%d\n",listSize);
+	printf("%ld\n",listSize);
 }
 
 void func_list_max(char* commandLine){
@@ -297,9 +294,7 @@ void func_list_max(char* commandLine){
 	int listIndex = getMatchingList(commandLine);
 	if(listIndex < 0) return;
 
-
-// TODO: less function 체크
-	struct list_elem* e = list_max(listPool[listIndex].item, less_func);
+	struct list_elem* e = list_max(listPool[listIndex].item, my_list_less_func, NULL);
 	struct list_item* item = list_entry(e, struct list_item, elem);
 	printf("%d\n", item->data);
 }
@@ -310,9 +305,7 @@ void func_list_min(char* commandLine){
 	int listIndex = getMatchingList(commandLine);
 	if(listIndex < 0) return;
 
-
-// TODO: less function 체크
-	struct list_elem* e = list_min(listPool[listIndex].item, less_func);
+	struct list_elem* e = list_min(listPool[listIndex].item, my_list_less_func, NULL);
 	struct list_item* item = list_entry(e, struct list_item, elem);
 	printf("%d\n", item->data);
 }
@@ -326,7 +319,7 @@ void func_list_remove(char* commandLine){
 	int argc = sscanf(commandLine, "%s %d %s", name, &value, buffer);
 	
 	if(argc>2){
-		printf("ERROR : TOO MUCH ARGUMENT.(list_push_back)\n");
+		printf("ERROR : TOO MUCH ARGUMENT.\n");
 		return;
 	}
 
@@ -336,7 +329,7 @@ void func_list_remove(char* commandLine){
 	struct list_elem* e = list_begin(listPool[listIndex].item);
 	struct list_item* item;
 	for(;e != list_end(listPool[listIndex].item); e = list_next(e)){
-		item = list_entry(e, list_item, elem);
+		item = list_entry(e, struct list_item, elem);
 		if(item->data == value) {
 			list_remove(e);
 			free(item);
@@ -360,12 +353,12 @@ void func_list_sort(char* commandLine){
 
 	int listIndex = getMatchingList(commandLine);
 	if(listIndex < 0) return;
-	// TODO : less func check
-	list_sort(listPool[listIndex].item, less_func);
+	
+	list_sort(listPool[listIndex].item, my_list_less_func, 0);
 
 }
 
-void func_list_remove(char* commandLine){
+void func_list_splice(char* commandLine){
 	int pos, first, last;
 	fgets(commandLine, MAX_CMD_LINE, stdin);
 
@@ -376,17 +369,78 @@ void func_list_remove(char* commandLine){
 		printf("ERROR : TOO MUCH ARGUMENT.\n");
 		return;
 	}
-// 6이랑 10은 dump 했을 때 왜 안나오징
+	
 	int listIndex1 = getMatchingList(name1), listIndex2 = getMatchingList(name2);
 	if(listIndex1 < 0 || listIndex2 < 0) return;
 
-	// TODO : 여기ㅏ부터어어어어어어
-
-
+	struct list_elem* pos_elem = list_begin(listPool[listIndex1].item);
+	for(int i = 0; i < pos; ++i)
+		pos_elem = pos_elem->next;	
+	
+	struct list_elem* first_elem, *last_elem;
+	first_elem = last_elem = list_begin(listPool[listIndex2].item);
+	for(int i=0;i<first;i++) 
+		first_elem = first_elem->next;
+	for(int i=0;i<last;i++)
+		last_elem = last_elem->next;
+	
+	list_splice(pos_elem, first_elem, last_elem);
 
 }
+
+void func_list_swap(char* commandLine){
+	int pos1, pos2;
+	fgets(commandLine, MAX_CMD_LINE, stdin);
+
+	char name[50], buffer[50];
+	int argc = sscanf(commandLine, "%s %d %d %s", name, &pos1, &pos2, buffer);
+	
+	if(argc>3){
+		printf("ERROR : TOO MUCH ARGUMENT.\n");
+		return;
+	}
+
+	int listIndex = getMatchingList(name);
+	if(listIndex < 0) return;
+
+	struct list_elem* elem1, *elem2;
+	elem1 = elem2 = list_begin(listPool[listIndex].item);
+	for(int i=0;i<pos1;i++)
+		elem1 = elem1->next;
+	for(int i=0;i<pos2;i++)
+		elem2 = elem2->next;
+
+	list_swap(elem1, elem2);
+
+}
+
+void func_list_unique(char* commandLine){
+	char name1[50], name2[50], buffer[50];	
+	fgets(commandLine, MAX_CMD_LINE, stdin);
+	int argc = sscanf(commandLine, "%s %s %s", name1, name2, buffer);
+	
+	if(argc>2){
+		printf("ERROR : TOO MUCH ARGUMENT.\n");
+		return;
+	}
+
+	int listIndex1 = getMatchingList(name1), listIndex2 = getMatchingList(name2);
+	if(listIndex1 < 0 || listIndex2 < 0) return;
+	
+	list_unique(listPool[listIndex1].item, listPool[listIndex2].item, my_list_less_func, 0);
+}
+
+
+void func_list_shuffle(char* commandLine){
+	if(!getNameOnly(commandLine)) return;
+
+	int index = getMatchingList(commandLine);
+
+	list_shuffle(listPool[index].item);
+
+}
+
 void execute(char* commandLine){
-	printf("function input : [%s]\n", commandLine);
 	int function = getFunction(commandLine);
 	if(function<0) return;
 
@@ -440,10 +494,13 @@ void execute(char* commandLine){
 			func_list_splice(commandLine);
 			break;
 		case LIST_SWAP:
-
+			func_list_swap(commandLine);
+			break;
+		case LIST_SHUFFLE:
+			func_list_shuffle(commandLine);
 			break;
 		case LIST_UNIQUE:
-
+			func_list_unique(commandLine);
 			break;
 
 		default:
@@ -511,9 +568,15 @@ int deleteList(char* name){
 	}
 
 	if(index>=0){
+		strcpy(listPool[index].name, "\0");
 
-		// TODO : 여기 안에 있는 원소들도 해제해야함!!
-	
+		struct list_elem* del, *e = list_begin(listPool[index].item);
+		while(e != list_end(listPool[index].item)){
+			del = e;
+			e = list_remove(e);
+			free(del);
+		}
+		
 		free(listPool[index].item);
 	}
 
@@ -546,14 +609,17 @@ void dumpdata(char* commandLine){
 
 	// 리스트에서 탐색
 	int index = getMatchingList(commandLine);
+	bool hasData = false;
 	if(index>-1){
 		struct list_elem* e = list_head(listPool[index].item);
 		struct list_item* i;
 		while((e = list_next (e)) != list_end(listPool[index].item)){
 			i = list_entry(e, struct list_item, elem);
 			printf("%d ", i->data);
+			hasData = true;
 		}
-		printf("\n");
+		if(hasData)
+			printf("\n");
 		return;
 	}
 
@@ -567,7 +633,6 @@ void dumpdata(char* commandLine){
 void parser(){
 	char commandLine[MAX_CMD_LINE];
 	while(true){
-		printf("command>> ");
 		COMMAND command = getCommand(commandLine);
 		//getchar();
 
@@ -605,6 +670,7 @@ void init(){
 void freeData(){
 	for(int i=0;i<MAX_ELEMENT;i++){
 		if(!listPool[i].item) free(listPool[i].item);
+		// TODO : element도 free 해줘야 함
 	}
 }
 
