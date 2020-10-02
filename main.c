@@ -9,6 +9,7 @@
 #include "round.h"
 #include "limits.h"
 #include "list.h"
+#include "hash.h"
 
 #define MAX_CMD_LINE 50
 #define MAX_ELEMENT 11
@@ -18,6 +19,7 @@
 typedef enum {CREATE, DELETE, DUMPDATA, QUIT, OTHERS} COMMAND;
 
 struct namedList listPool[MAX_ELEMENT];
+struct hash *hashPool[MAX_ELEMENT];
 
 typedef enum {
 	LIST_FRONT = 0, LIST_BACK, LIST_PUSH_FRONT, LIST_PUSH_BACK, LIST_POP_FRONT, 
@@ -75,6 +77,7 @@ void createList(char* name){
 	if(listIndex<0) return;
 
 	strcpy(listPool[listIndex].name, name);
+	listPool[listIndex].item = (struct list*)malloc(sizeof(struct list));
 	list_init(listPool[listIndex].item);
 
 }
@@ -200,6 +203,7 @@ void func_list_pop_front(char* commandLine){
 	struct list_item *del = list_entry(e, struct list_item, elem);
 	
 	free(del);
+	del = NULL;
 }
 
 void func_list_pop_back(char* commandLine){
@@ -212,7 +216,7 @@ void func_list_pop_back(char* commandLine){
 	struct list_item *del = list_entry(e, struct list_item, elem);
 	
 	free(del);
-
+	del = NULL;
 }
 
 void func_list_insert(char* commandLine){
@@ -312,11 +316,11 @@ void func_list_min(char* commandLine){
 
 	
 void func_list_remove(char* commandLine){
-	int value;
+	int index;
 	fgets(commandLine, MAX_CMD_LINE, stdin);
 
 	char name[50], buffer[50];
-	int argc = sscanf(commandLine, "%s %d %s", name, &value, buffer);
+	int argc = sscanf(commandLine, "%s %d %s", name, &index, buffer);
 	
 	if(argc>2){
 		printf("ERROR : TOO MUCH ARGUMENT.\n");
@@ -327,15 +331,12 @@ void func_list_remove(char* commandLine){
 	if(listIndex < 0) return;
 	
 	struct list_elem* e = list_begin(listPool[listIndex].item);
-	struct list_item* item;
-	for(;e != list_end(listPool[listIndex].item); e = list_next(e)){
-		item = list_entry(e, struct list_item, elem);
-		if(item->data == value) {
-			list_remove(e);
-			free(item);
-			return;
-		}
-	}
+	for(int i=0; i<index; i++)
+		e = e->next;
+	list_remove(e);
+	struct list_item* del = list_entry(e, struct list_item, elem);
+	free(del);
+	del = NULL;
 }
 
 void func_list_reverse(char* commandLine){
@@ -423,11 +424,16 @@ void func_list_unique(char* commandLine){
 		printf("ERROR : TOO MUCH ARGUMENT.\n");
 		return;
 	}
-
-	int listIndex1 = getMatchingList(name1), listIndex2 = getMatchingList(name2);
-	if(listIndex1 < 0 || listIndex2 < 0) return;
 	
-	list_unique(listPool[listIndex1].item, listPool[listIndex2].item, my_list_less_func, 0);
+	int listIndex1 = getMatchingList(name1), listIndex2 = getMatchingList(name2);
+	if(listIndex1 < 0)  return;
+
+	if(argc == 1)
+		list_unique(listPool[listIndex1].item, NULL, my_list_less_func, NULL);
+	else if(argc == 2 && listIndex2 > -1)
+		list_unique(listPool[listIndex1].item, listPool[listIndex2].item, my_list_less_func, NULL);
+
+	return;
 }
 
 
@@ -512,6 +518,22 @@ void execute(char* commandLine){
 
 }
 
+
+int getEmptyHash(){
+	for(int i=0; i<MAX_ELEMENT;i++)
+		if(!hashPool[i]) return i;
+	return -1;
+}
+
+void createHash(char* name){
+	int hashIndex = getEmptyList();
+	if(hashIndex<0) return;
+	
+	hashPool[hashIndex] = (struct hash*)malloc(sizeof(struct hash));
+	hash_init(hashPool[hashIndex], my_hash_func, my_hash_less_func, NULL);
+
+}
+
 void create(char *commandLine){
 	char* w = commandLine;
 	char c;	
@@ -547,7 +569,7 @@ void create(char *commandLine){
 			createList(name);
 			break;
 		case HASH:
-
+			createHash(name);
 			break;
 		case BITMAP:
 
@@ -570,14 +592,16 @@ int deleteList(char* name){
 	if(index>=0){
 		strcpy(listPool[index].name, "\0");
 
-		struct list_elem* del, *e = list_begin(listPool[index].item);
+		struct list_elem* e = list_begin(listPool[index].item);
 		while(e != list_end(listPool[index].item)){
-			del = e;
+			struct list_item* del = list_entry(e, struct list_item, elem);
 			e = list_remove(e);
 			free(del);
+			del = NULL;
 		}
 		
 		free(listPool[index].item);
+		listPool[index].item = NULL;
 	}
 
 	return index;
@@ -664,13 +688,33 @@ void parser(){
 
 
 void init(){
+	for(int i=0; i<MAX_ELEMENT; i++){
+		listPool[i].item = NULL;
+		strcpy(listPool[i].name, "\0");
 
+		hashPool[i] = NULL;
+	}
+	
 }
 
 void freeData(){
 	for(int i=0;i<MAX_ELEMENT;i++){
-		if(!listPool[i].item) free(listPool[i].item);
-		// TODO : element도 free 해줘야 함
+		if(listPool[i].item){
+			struct list_elem* e = list_begin(listPool[i].item);
+			while(e != list_end(listPool[i].item)){
+				struct list_item* del = list_entry(e, struct list_item, elem);
+				e = list_remove(e);
+				free(del);
+				del = NULL;
+			}
+			free(listPool[i].item);
+			listPool[i].item = NULL;
+		}
+
+		if(hashPool[i]){
+			// TODO : free hashPool;
+			hashPool[i] = NULL;
+		}
 	}
 }
 

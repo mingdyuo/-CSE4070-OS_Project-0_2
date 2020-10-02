@@ -555,12 +555,18 @@ void list_swap(struct list_elem *a, struct list_elem *b)
 void list_shuffle(struct list *list)
 {
 	srand(time(NULL));
-	int temp, rn;
+	int rn;
 	size_t size = list_size(list);
-	for(int i=0; i<size;i++){
-		rn = rand() % size;
+
+	struct list_elem* curr = list_begin(list);
+	for(int i=0; i<size-1;i++){
+		rn = rand() % (size - i) + i;
+		struct list_elem* target = list_begin(list);
+		for(int j=0;j<rn;j++)
+			target = target->next;
 		
-		
+		list_swap(curr, target);
+		curr = curr->next;
 	}
 }
 
@@ -570,8 +576,3 @@ bool my_list_less_func(const struct list_elem *elem, const struct list_elem* e, 
 
 	return new_val->data < check_val->data;
 }
-/*
-list_less_func get_list_less(){
-	return my_list_less_func;
-}
-*/

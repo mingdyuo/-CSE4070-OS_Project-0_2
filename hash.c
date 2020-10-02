@@ -430,3 +430,28 @@ remove_elem (struct hash *h, struct hash_elem *e)
   list_remove (&e->list_elem);
 }
 
+
+/* For Project 0_2 */
+unsigned my_hash_func(const struct hash_elem* e, void* aux){
+	struct hash_item* i = hash_entry(e, struct hash_item, elem);
+	
+	float num = (i->data < 0)? -(i->data):i->data;
+	float temp = num * 0.6180339f;
+	return (unsigned)temp;
+
+}
+
+
+bool my_hash_less_func (const struct hash_elem *a,
+						const struct hash_elem *b,
+						void *aux){
+	struct hash_item* e1 = hash_entry(a, struct hash_item, elem); 
+	struct hash_item* e2 = hash_entry(b, struct hash_item, elem); 
+
+	return e1->data < e2->data;
+}
+
+void my_hash_action_func(struct hash_elem *e, void *aux){
+
+
+}
