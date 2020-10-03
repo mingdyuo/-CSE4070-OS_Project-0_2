@@ -10,16 +10,17 @@
 #include "limits.h"
 #include "list.h"
 #include "hash.h"
+#include "bitmap.h"
 
 #define MAX_CMD_LINE 50
 #define MAX_ELEMENT 11
-
 /* decide what kind of the command is.
    "OTHERS" means it is data structure dependent command */
 typedef enum {CREATE, DELETE, DUMPDATA, QUIT, OTHERS} COMMAND;
 
 struct namedList listPool[MAX_ELEMENT];
 struct namedHash hashPool[MAX_ELEMENT];
+struct namedBitmap bitmapPool[MAX_ELEMENT];
 
 typedef enum {
 	// List funcions
@@ -33,8 +34,11 @@ typedef enum {
 	// Bitmap functions
 	BITMAP_MARK, BITMAP_ALL, BITMAP_ANY, BITMAP_CONTAINS, BITMAP_COUNT,
 	BITMAP_EXPAND, BITMAP_SET_ALL, BITMAP_FLIP, BITMAP_NONE, BITMAP_RESET,
-	BITMAP_SCAN_AND_FLIP, BITMAP_SCAN, BITMAP_SET, BITMAP_SET_MULTIPLE, BITMAP_TEST
+	BITMAP_SCAN_AND_FLIP, BITMAP_SCAN, BITMAP_SET, BITMAP_SET_MULTIPLE, BITMAP_TEST,
+	BITMAP_DUMP, BITMAP_SIZE
 }FUNCTION;
+
+#define FUNCTION_CNT (BITMAP_SIZE + 1)
 
 char* functionNameList[] = {
 	// List functions
@@ -48,11 +52,12 @@ char* functionNameList[] = {
 	// Bitmap functions
 	"bitmap_mark", "bitmap_all", "bitmap_any", "bitmap_contains", "bitmap_count",
 	"bitmap_expand", "bitmap_set_all", "bitmap_flip", "bitmap_none", "bitmap_reset",
-	"bitmap_scan_and_flip", "bitmap_scan", "bitmap_set", "bitmap_set_multiple", "bitmap_test"
+	"bitmap_scan_and_flip", "bitmap_scan", "bitmap_set", "bitmap_set_multiple", "bitmap_test",
+	"bitmap_dump", "bitmap_size"
 };
 
 FUNCTION getFunction(char* functionName){
-	for(int i=0;i<42;i++){
+	for(int i=0;i<FUNCTION_CNT;i++){
 		if(!strcmp(functionName, functionNameList[i])) return i;
 	}
 	return -1;
@@ -120,7 +125,7 @@ bool getNameOnly(char* commandLine){
 	int argc = sscanf(commandLine, "%s %s", name, buffer);
 	
 	if(argc>1){
-		printf("ERROR : TOO MUCH ARGUMENT. JUST TYPE NAME WITHOUT WHITESPACE\n");
+		fprintf(stdout, "ERROR : TOO MUCH ARGUMENT. JUST TYPE NAME WITHOUT WHITESPACE\n");
 		return false;
 	}
 
@@ -143,6 +148,13 @@ int getMatchingHash(char* name){
 	return -1;
 }
 
+int getMatchingBitmap(char* name){
+	for(int i=0;i<MAX_ELEMENT;i++){
+		if(!strcmp(name, bitmapPool[i].name)) return i;
+	}
+	return -1;
+}
+
 void func_list_front(char* name){
 	if(!getNameOnly(name)) return;
 	
@@ -153,7 +165,7 @@ void func_list_front(char* name){
 
 	struct list_elem* e = list_front(listPool[listIndex].item);
 	struct list_item *temp = list_entry(e, struct list_item, elem);
-	printf("%d\n", temp->data);
+	fprintf(stdout, "%d\n", temp->data);
 	
 }
 
@@ -168,7 +180,7 @@ void func_list_back(char* name){
 	struct list_elem* e = list_back(listPool[listIndex].item);
 	struct list_item *temp = list_entry(e, struct list_item, elem);
 
-	printf("%d\n", temp->data);
+	fprintf(stdout, "%d\n", temp->data);
 }
 
 void func_list_push_front(char* commandLine){
@@ -181,7 +193,7 @@ void func_list_push_front(char* commandLine){
 	if(argc>2){
 
 
-		printf("ERROR : TOO MUCH ARGUMENT.(list_push_front) \n");
+		fprintf(stdout, "ERROR : TOO MUCH ARGUMENT.(list_push_front) \n");
 		return;
 	}
 
@@ -203,7 +215,7 @@ void func_list_push_back(char* commandLine){
 	int argc = sscanf(commandLine, "%s %d %s", name, &value, buffer);
 	
 	if(argc>2){
-		printf("ERROR : TOO MUCH ARGUMENT.(list_push_back)\n");
+		fprintf(stdout, "ERROR : TOO MUCH ARGUMENT.(list_push_back)\n");
 		return;
 	}
 
@@ -251,7 +263,7 @@ void func_list_insert(char* commandLine){
 	int argc = sscanf(commandLine, "%s %d %d %s", name, &position, &value, buffer);
 	
 	if(argc>3){
-		printf("ERROR : TOO MUCH ARGUMENT.\n");
+		fprintf(stdout, "ERROR : TOO MUCH ARGUMENT.\n");
 		return;
 	}
 
@@ -281,7 +293,7 @@ void func_list_insert_ordered(char* commandLine){
 	int argc = sscanf(commandLine, "%s %d %s", name, &value, buffer);
 	
 	if(argc>2){
-		printf("ERROR : TOO MUCH ARGUMENT.\n");
+		fprintf(stdout, "ERROR : TOO MUCH ARGUMENT.\n");
 		return;
 	}
 
@@ -301,9 +313,9 @@ void func_list_empty(char* name){
 	if(listIndex < 0) return;
 	
 	if(list_empty(listPool[listIndex].item)) 
-		printf("true\n");
+		fprintf(stdout, "true\n");
 	else 
-		printf("false\n");
+		fprintf(stdout, "false\n");
 }
 
 void func_list_size(char* name){
@@ -313,7 +325,7 @@ void func_list_size(char* name){
 	if(listIndex < 0) return;
 	
 	size_t listSize = list_size(listPool[listIndex].item);
-	printf("%zu\n",listSize);
+	fprintf(stdout, "%zu\n",listSize);
 }
 
 void func_list_max(char* name){
@@ -324,7 +336,7 @@ void func_list_max(char* name){
 
 	struct list_elem* e = list_max(listPool[listIndex].item, my_list_less_func, NULL);
 	struct list_item* item = list_entry(e, struct list_item, elem);
-	printf("%d\n", item->data);
+	fprintf(stdout, "%d\n", item->data);
 }
 
 void func_list_min(char* name){
@@ -335,7 +347,7 @@ void func_list_min(char* name){
 
 	struct list_elem* e = list_min(listPool[listIndex].item, my_list_less_func, NULL);
 	struct list_item* item = list_entry(e, struct list_item, elem);
-	printf("%d\n", item->data);
+	fprintf(stdout, "%d\n", item->data);
 }
 
 	
@@ -347,7 +359,7 @@ void func_list_remove(char* commandLine){
 	int argc = sscanf(commandLine, "%s %d %s", name, &index, buffer);
 	
 	if(argc>2){
-		printf("ERROR : TOO MUCH ARGUMENT.\n");
+		fprintf(stdout, "ERROR : TOO MUCH ARGUMENT.\n");
 		return;
 	}
 
@@ -391,7 +403,7 @@ void func_list_splice(char* commandLine){
 	int argc = sscanf(commandLine, "%s %d %s %d %d %s", name1, &pos, name2, &first, &last, buffer);
 	
 	if(argc>5){
-		printf("ERROR : TOO MUCH ARGUMENT.\n");
+		fprintf(stdout, "ERROR : TOO MUCH ARGUMENT.\n");
 		return;
 	}
 	
@@ -421,7 +433,7 @@ void func_list_swap(char* commandLine){
 	int argc = sscanf(commandLine, "%s %d %d %s", name, &pos1, &pos2, buffer);
 	
 	if(argc>3){
-		printf("ERROR : TOO MUCH ARGUMENT.\n");
+		fprintf(stdout, "ERROR : TOO MUCH ARGUMENT.\n");
 		return;
 	}
 
@@ -445,7 +457,7 @@ void func_list_unique(char* commandLine){
 	int argc = sscanf(commandLine, "%s %s %s", name1, name2, buffer);
 	
 	if(argc>2){
-		printf("ERROR : TOO MUCH ARGUMENT.\n");
+		fprintf(stdout, "ERROR : TOO MUCH ARGUMENT.\n");
 		return;
 	}
 	
@@ -478,7 +490,7 @@ void func_hash_insert(char* commandLine){
 	int argc = sscanf(commandLine, "%s %d %s", name, &value, buffer);
 
 	if(argc>2){
-		printf("ERROR : TOO MUCH ARGUMENT.\n");
+		fprintf(stdout, "ERROR : TOO MUCH ARGUMENT.\n");
 		return;
 	}
 
@@ -498,7 +510,7 @@ void func_hash_apply(char* commandLine){
 	int argc = sscanf(commandLine, "%s %s %s", name, apply, buffer);
 
 	if(argc != 2){
-		printf("ERROR : ARGUMENT NOT MATCHED\n");
+		fprintf(stdout, "ERROR : ARGUMENT NOT MATCHED\n");
 		return;
 	}
 
@@ -522,7 +534,7 @@ void func_hash_delete(char* commandLine){
 	int argc = sscanf(commandLine, "%s %d %s", name, &value, buffer);
 
 	if(argc != 2){
-		printf("ERROR : ARGUMENT NOT MATCHED\n");
+		fprintf(stdout, "ERROR : ARGUMENT NOT MATCHED\n");
 		return;
 	}
 
@@ -547,8 +559,8 @@ void func_hash_empty(char* name){
 	int index = getMatchingHash(name);
 	if(index < 0) return;
 
-	if(hash_empty(hashPool[index].item)) printf("true\n");
-	else printf("false\n");
+	if(hash_empty(hashPool[index].item)) fprintf(stdout, "true\n");
+	else fprintf(stdout, "false\n");
 
 }
 
@@ -580,7 +592,7 @@ void func_hash_find(char* commandLine){
 	int argc = sscanf(commandLine, "%s %d %s", name, &value, buffer);
 
 	if(argc != 2){
-		printf("ERROR : ARGUMENT NOT MATCHED\n");
+		fprintf(stdout, "ERROR : ARGUMENT NOT MATCHED\n");
 		return;
 	}
 
@@ -593,7 +605,7 @@ void func_hash_find(char* commandLine){
 	struct hash_elem* target = hash_find(hashPool[index].item, &(i.elem));
 	if(target){
 		struct hash_item* item = hash_entry(target, struct hash_item, elem);
-		fprintf(stdout, "%d ", item->data);
+		fprintf(stdout, "%d\n", item->data);
 	}
 }
 
@@ -605,7 +617,7 @@ void func_hash_replace(char* commandLine){
 	int argc = sscanf(commandLine, "%s %d %s", name, &value, buffer);
 
 	if(argc != 2){
-		printf("ERROR : ARGUMENT NOT MATCHED\n");
+		fprintf(stdout, "ERROR : ARGUMENT NOT MATCHED\n");
 		return;
 	}
 
@@ -620,10 +632,345 @@ void func_hash_replace(char* commandLine){
 	free(del);
 }
 
+void func_bitmap_mark(char* commandLine){
+	fgets(commandLine, MAX_CMD_LINE, stdin);
+
+	char name[50], buffer[50];
+	size_t bit_index;
+	int argc = sscanf(commandLine, "%s %zu %s", name, &bit_index, buffer);
+
+	if(argc != 2){
+		fprintf(stdout, "ERROR : ARGUMENT NOT MATCHED\n");
+		return;
+	}
+
+	int index = getMatchingBitmap(name);
+	if(index < 0) return;
+
+	bitmap_mark(bitmapPool[index].item, bit_index);
+}
+
+
+void func_bitmap_all(char* commandLine){
+	fgets(commandLine, MAX_CMD_LINE, stdin);
+
+	char name[50], buffer[50];
+	size_t start, cnt;
+	int argc = sscanf(commandLine, "%s %zu %zu %s", name, &start, &cnt, buffer);
+
+	if(argc != 3){
+		fprintf(stdout, "ERROR : ARGUMENT NOT MATCHED\n");
+		return;
+	}
+
+	int index = getMatchingBitmap(name);
+	if(index < 0) return;
+	
+	fprintf(stdout, bitmap_all(bitmapPool[index].item, start, cnt) ? "true\n" : "false\n");
+}
+
+
+
+void func_bitmap_any(char* commandLine){
+	fgets(commandLine, MAX_CMD_LINE, stdin);
+
+	char name[50], buffer[50];
+	size_t start, cnt;
+	int argc = sscanf(commandLine, "%s %zu %zu %s", name, &start, &cnt, buffer);
+
+	if(argc != 3){
+		fprintf(stdout, "ERROR : ARGUMENT NOT MATCHED\n");
+		return;
+	}
+
+	int index = getMatchingBitmap(name);
+	if(index < 0) return;
+	
+	fprintf(stdout, bitmap_any(bitmapPool[index].item, start, cnt) ? "true\n" : "false\n");
+}
+
+void func_bitmap_contains(char* commandLine){
+	fgets(commandLine, MAX_CMD_LINE, stdin);
+
+	char name[50], value[10], buffer[50];
+	size_t start, cnt;
+	int argc = sscanf(commandLine, "%s %zu %zu %s %s", name, &start, &cnt, value, buffer);
+
+	if(argc != 4){
+		fprintf(stdout, "ERROR : ARGUMENT NOT MATCHED\n");
+		return;
+	}
+
+	int index = getMatchingBitmap(name);
+	if(index < 0) return;
+	
+	int result = -1;
+	if(!strcmp(value, "true"))
+		result = bitmap_contains(bitmapPool[index].item, start, cnt, 1);
+	else if(!strcmp(value, "false"))
+		result = bitmap_contains(bitmapPool[index].item, start, cnt, 0);
+	
+	if(result>-1)
+		fprintf(stdout, result ? "true\n" : "false\n");
+
+}
+
+void func_bitmap_count(char* commandLine){
+	fgets(commandLine, MAX_CMD_LINE, stdin);
+
+	char name[50], value[10], buffer[50];
+	size_t start, cnt;
+	int argc = sscanf(commandLine, "%s %zu %zu %s %s", name, &start, &cnt, value, buffer);
+
+	if(argc != 4){
+		fprintf(stdout, "ERROR : ARGUMENT NOT MATCHED\n");
+		return;
+	}
+
+	int index = getMatchingBitmap(name);
+	if(index < 0) return;
+	
+	int result = -1;
+	if(!strcmp(value, "true"))
+		result = bitmap_count(bitmapPool[index].item, start, cnt, 1);
+	else if(!strcmp(value, "false"))
+		result = bitmap_count(bitmapPool[index].item, start, cnt, 0);
+	
+	if(result > -1)
+		fprintf(stdout,"%d\n", result); 
+}
+
+void func_bitmap_expand(char* commandLine){
+	fgets(commandLine, MAX_CMD_LINE, stdin);
+
+	char name[50], buffer[50];
+	size_t cnt;
+	int argc = sscanf(commandLine, "%s %zu %s", name, &cnt, buffer);
+
+	if(argc != 2){
+		fprintf(stdout, "ERROR : ARGUMENT NOT MATCHED\n");
+		return;
+	}
+
+	int index = getMatchingBitmap(name);
+	if(index < 0) return;
+		
+	bitmapPool[index].item = bitmap_expand(bitmapPool[index].item, cnt);
+
+}
+
+void func_bitmap_set_all(char* commandLine){
+	fgets(commandLine, MAX_CMD_LINE, stdin);
+
+	char name[50], value[10], buffer[50];
+	int argc = sscanf(commandLine, "%s %s %s", name, value, buffer);
+
+	if(argc != 2){
+		fprintf(stdout, "ERROR : ARGUMENT NOT MATCHED\n");
+		return;
+	}
+
+	int index = getMatchingBitmap(name);
+	if(index < 0) return;
+	
+	if(!strcmp(value, "true")){
+		bitmap_set_all(bitmapPool[index].item, 1);
+	}
+	else if(!strcmp(value, "false")){
+		bitmap_set_all(bitmapPool[index].item, 0);
+	}
+}
+
+void func_bitmap_flip(char* commandLine){
+	fgets(commandLine, MAX_CMD_LINE, stdin);
+
+	char name[50], buffer[50];
+	size_t bit_idx;
+	int argc = sscanf(commandLine, "%s %zu %s", name, &bit_idx, buffer);
+
+	if(argc != 2){
+		fprintf(stdout, "ERROR : ARGUMENT NOT MATCHED\n");
+		return;
+	}
+
+	int index = getMatchingBitmap(name);
+	if(index < 0) return;
+	
+	bitmap_flip(bitmapPool[index].item, bit_idx);
+
+}
+
+void func_bitmap_none(char* commandLine){
+	fgets(commandLine, MAX_CMD_LINE, stdin);
+
+	char name[50], buffer[50];
+	size_t start, cnt;
+	int argc = sscanf(commandLine, "%s %zu %zu %s", name, &start, &cnt, buffer);
+
+	if(argc != 3){
+		fprintf(stdout, "ERROR : ARGUMENT NOT MATCHED\n");
+		return;
+	}
+
+	int index = getMatchingBitmap(name);
+	if(index < 0) return;
+	
+	if(bitmap_none(bitmapPool[index].item, start, cnt)) 
+		fprintf(stdout, "true\n");
+	else
+		fprintf(stdout, "false\n");
+
+}
+
+void func_bitmap_reset(char* commandLine){
+	fgets(commandLine, MAX_CMD_LINE, stdin);
+
+	char name[50], buffer[50];
+	size_t bit_idx;
+	int argc = sscanf(commandLine, "%s %zu %s", name, &bit_idx, buffer);
+
+	if(argc != 2){
+		fprintf(stdout, "ERROR : ARGUMENT NOT MATCHED\n");
+		return;
+	}
+
+	int index = getMatchingBitmap(name);
+	if(index < 0) return;
+	
+	bitmap_reset(bitmapPool[index].item, bit_idx);
+}
+
+void func_bitmap_scan_and_flip(char* commandLine){
+	fgets(commandLine, MAX_CMD_LINE, stdin);
+
+	char name[50], value[10], buffer[50];
+	size_t start, cnt;
+	int argc = sscanf(commandLine, "%s %zu %zu %s %s", name, &start, &cnt, value, buffer);
+
+	if(argc != 4){
+		fprintf(stdout, "ERROR : ARGUMENT NOT MATCHED\n");
+		return;
+	}
+
+	int index = getMatchingBitmap(name);
+	if(index < 0) return;
+
+	size_t result;
+	if(!strcmp(value, "true"))
+		result = bitmap_scan_and_flip(bitmapPool[index].item, start, cnt, 1);
+	else if(!strcmp(value, "false"))	
+		result = bitmap_scan_and_flip(bitmapPool[index].item, start, cnt, 0);
+
+	fprintf(stdout, "%zu\n", result);
+}
+
+void func_bitmap_scan(char* commandLine){
+	fgets(commandLine, MAX_CMD_LINE, stdin);
+
+	char name[50], value[10], buffer[50];
+	size_t start, cnt;
+	int argc = sscanf(commandLine, "%s %zu %zu %s %s", name, &start, &cnt, value, buffer);
+
+	if(argc != 4){
+		fprintf(stdout, "ERROR : ARGUMENT NOT MATCHED\n");
+		return;
+	}
+
+	int index = getMatchingBitmap(name);
+	if(index < 0) return;
+	
+	size_t result;
+	if(!strcmp(value, "true"))
+		result = bitmap_scan(bitmapPool[index].item, start, cnt, 1);
+	else if(!strcmp(value, "false"))	
+		result = bitmap_scan(bitmapPool[index].item, start, cnt, 0);
+
+	fprintf(stdout, "%zu\n", result);
+}
+
+void func_bitmap_set(char* commandLine){
+	fgets(commandLine, MAX_CMD_LINE, stdin);
+
+	char name[50], value[10], buffer[50];
+	size_t idx; 
+	int argc = sscanf(commandLine, "%s %zu %s %s", name, &idx, value, buffer);
+
+	if(argc != 3){
+		fprintf(stdout, "ERROR : ARGUMENT NOT MATCHED\n");
+		return;
+	}
+
+	int index = getMatchingBitmap(name);
+	if(index < 0) return;
+	
+	if(!strcmp(value, "true"))
+		bitmap_set(bitmapPool[index].item, idx, 1);
+	if(!strcmp(value, "false"))
+		bitmap_set(bitmapPool[index].item, idx, 0);
+}
+
+void func_bitmap_set_multiple(char* commandLine){
+	fgets(commandLine, MAX_CMD_LINE, stdin);
+
+	char name[50], value[10], buffer[50];
+	size_t start, cnt; 
+	int argc = sscanf(commandLine, "%s %zu %zu %s %s", name, &start, &cnt, value, buffer);
+
+	if(argc != 4){
+		fprintf(stdout, "ERROR : ARGUMENT NOT MATCHED\n");
+		return;
+	}
+
+	int index = getMatchingBitmap(name);
+	if(index < 0) return;
+	
+	if(!strcmp(value, "true"))
+		bitmap_set_multiple(bitmapPool[index].item, start, cnt, 1);
+	if(!strcmp(value, "false"))
+		bitmap_set_multiple(bitmapPool[index].item, start, cnt, 0);
+
+}
+
+void func_bitmap_test(char* commandLine){
+	fgets(commandLine, MAX_CMD_LINE, stdin);
+
+	char name[50], buffer[50];
+	size_t idx; 
+	int argc = sscanf(commandLine, "%s %zu %s", name, &idx, buffer);
+
+	if(argc != 2){
+		fprintf(stdout, "ERROR : ARGUMENT NOT MATCHED\n");
+		return;
+	}
+
+	int index = getMatchingBitmap(name);
+	if(index < 0) return;
+	
+	fprintf(stdout, bitmap_test(bitmapPool[index].item, idx) ? "true\n" : "false\n");
+}
+
+
+void func_bitmap_dump(char* name){
+	if(!getNameOnly(name)) return;
+
+	int index = getMatchingBitmap(name);
+	if(index < 0) return;
+
+	bitmap_dump(bitmapPool[index].item);
+}
+
+void func_bitmap_size(char* name){
+	if(!getNameOnly(name)) return;
+
+	int index = getMatchingBitmap(name);
+	if(index < 0) return;
+
+	fprintf(stdout, "%zu\n", bitmap_size(bitmapPool[index].item));
+}
+
 void execute(char* commandLine){
 	int function = getFunction(commandLine);
 	if(function<0) return;
-
 	switch(function){
 		/* LIST COMMANDS */
 		case LIST_FRONT:
@@ -710,56 +1057,59 @@ void execute(char* commandLine){
 			break;
 		/* BITMAP COMMANDS */
 		case BITMAP_MARK:
-
+			func_bitmap_mark(commandLine);
 			break;
 		case BITMAP_ALL:
-
+			func_bitmap_all(commandLine);
 			break;
 		case BITMAP_ANY:
-
+			func_bitmap_any(commandLine);
 			break;
 		case BITMAP_CONTAINS:
-
+			func_bitmap_contains(commandLine);
 			break;
 		case BITMAP_COUNT:
-
+			func_bitmap_count(commandLine);
 			break;
 		case BITMAP_EXPAND:
-
+			func_bitmap_expand(commandLine);
 			break;
 		case BITMAP_SET_ALL:
-
+			func_bitmap_set_all(commandLine);
 			break;
 		case BITMAP_FLIP:
-
+			func_bitmap_flip(commandLine);
 			break;
 		case BITMAP_NONE:
-
+			func_bitmap_none(commandLine);
 			break;
 		case BITMAP_RESET:
-
+			func_bitmap_reset(commandLine);
 			break;
 		case BITMAP_SCAN_AND_FLIP:
-
+			func_bitmap_scan_and_flip(commandLine);
 			break;
 		case BITMAP_SCAN:
-
+			func_bitmap_scan(commandLine);
 			break;
 		case BITMAP_SET:
-
+			func_bitmap_set(commandLine);
 			break;
 		case BITMAP_SET_MULTIPLE:
-
+			func_bitmap_set_multiple(commandLine);
 			break;
 		case BITMAP_TEST:
-
+			func_bitmap_test(commandLine);
+			break;
+		case BITMAP_DUMP:
+			func_bitmap_dump(commandLine);
+			break;
+		case BITMAP_SIZE:
+			func_bitmap_size(commandLine);
 			break;
 		default:
 			break;
 	}
-
-	
-
 
 }
 
@@ -780,6 +1130,21 @@ void createHash(char* name){
 
 }
 
+int getEmptyBitmap(){
+	for(int i=0;i<MAX_ELEMENT;i++)
+		if(!bitmapPool[i].item) return i;
+	return -1;
+}
+
+void createBitmap(char* name, int bitmap_cnt){
+	int bitmapIndex = getEmptyBitmap();
+	if(bitmapIndex < 0) return;
+
+	strcpy(bitmapPool[bitmapIndex].name, name);
+	bitmapPool[bitmapIndex].item = bitmap_create(bitmap_cnt);
+
+}
+
 void create(char *commandLine){
 	char* w = commandLine;
 	char c;	
@@ -794,21 +1159,20 @@ void create(char *commandLine){
 	}
 	
 	if(dataType == NONE){
-		printf("ERROR : INVALID DATA STRUCTURE. CANNOT CREATE.\n");
+		fprintf(stdout, "ERROR : INVALID DATA STRUCTURE. CANNOT CREATE.\n");
 		return;
 	}
 	
-
 	fgets(commandLine, MAX_CMD_LINE, stdin);
 
 	char name[50], buffer[50];
-	int argc = sscanf(commandLine, "%s %s", name, buffer);
+	int bitmap_cnt = -1;
+	int argc = sscanf(commandLine, "%s %d %s", name, &bitmap_cnt, buffer);
 	
-	if(argc>1){
-		printf("ERROR : TOO MUCH ARGUMENT. JUST TYPE NAME WITHOUT WHITESPACE\n");
+	if(argc>2){
+		fprintf(stdout, "ERROR : TOO MUCH ARGUMENT. JUST TYPE NAME WITHOUT WHITESPACE\n");
 		return;
 	}
-
 
 	switch(dataType){
 		case LIST:
@@ -818,7 +1182,7 @@ void create(char *commandLine){
 			createHash(name);
 			break;
 		case BITMAP:
-
+			createBitmap(name, bitmap_cnt);
 			break;
 		default:
 			break;
@@ -827,14 +1191,7 @@ void create(char *commandLine){
 
 
 int deleteList(char* name){
-	int index = -1;
-
-	for(int i=0;i<MAX_ELEMENT;i++){
-		if(!strcmp(name,listPool[i].name)) {
-			index = i;
-			break;
-		}
-	}
+	int index = getMatchingList(name);
 
 	if(index>=0){
 		strcpy(listPool[index].name, "\0");
@@ -855,14 +1212,8 @@ int deleteList(char* name){
 }
 
 int deleteHash(char* name){
-	int index = -1;
+	int index = getMatchingHash(name);
 
-	for(int i=0;i<MAX_ELEMENT;i++){
-		if(!strcmp(name,hashPool[i].name)) {
-			index = i;
-			break;
-		}
-	}
 	if(index>=0){
 		struct hash* hashPtr = hashPool[index].item;
 		struct hash_iterator iter;
@@ -882,6 +1233,18 @@ int deleteHash(char* name){
 	return index;
 }
 
+int deleteBitmap(char* name){
+	int index = getMatchingBitmap(name);
+
+	if(index>=0){
+		bitmap_destroy(bitmapPool[index].item);
+		bitmapPool[index].item = NULL;
+		strcpy(bitmapPool[index].name, "\0");
+	}
+
+	return index;
+}
+
 void delete(char* commandLine){
 	fgets(commandLine, MAX_CMD_LINE, stdin);
 
@@ -889,16 +1252,17 @@ void delete(char* commandLine){
 	int argc = sscanf(commandLine, "%s %s", name, buffer);
 
 	if(argc > 1){
-		printf("ERROR : TOO MUCH ARGUMENT. JUST TYPE THE NAME WITHOUT WHITSPACE\n");
+		fprintf(stdout, "ERROR : TOO MUCH ARGUMENT. JUST TYPE THE NAME WITHOUT WHITSPACE\n");
 		return;
 	}
 
 	if(deleteList(name)>-1) return;
 	
 	if(deleteHash(name)>-1) return;
+	
+	if(deleteBitmap(name)>-1) return;
 
-
-	printf("MESSAGE : NO MATCHED NAME FOUND\n");
+	fprintf(stdout, "MESSAGE : NO MATCHED NAME FOUND\n");
 	return;
 	
 }
@@ -915,11 +1279,11 @@ void dumpdata(char* commandLine){
 		struct list_item* i;
 		while((e = list_next (e)) != list_end(listPool[index].item)){
 			i = list_entry(e, struct list_item, elem);
-			printf("%d ", i->data);
+			fprintf(stdout, "%d ", i->data);
 			hasData = true;
 		}
 		if(hasData)
-			printf("\n");
+			fprintf(stdout, "\n");
 		return;
 	}
 	// 해시에서 탐색
@@ -935,10 +1299,20 @@ void dumpdata(char* commandLine){
 			hasData = true;
 		}
 		if(hasData) fprintf(stdout, "\n");
+		return;
 	}
 
 	// 비트맵에서 탐색
-	
+	index = getMatchingBitmap(commandLine);
+	if(index>-1){
+		struct bitmap* bitmap = bitmapPool[index].item;
+		size_t size = bitmap_size(bitmap);
+		for(size_t idx=0; idx<size; idx++){
+			fprintf(stdout, "%d", bitmap_test(bitmap, idx));
+		}
+		fprintf(stdout, "\n");
+		return;
+	}
 
 }
 
@@ -966,8 +1340,6 @@ void parser(){
 				break;
 			default:
 				break;
-
-
 		}
 
 	}
@@ -981,6 +1353,9 @@ void init(){
 
 		hashPool[i].item = NULL;
 		strcpy(hashPool[i].name, "\0");
+
+		bitmapPool[i].item = NULL;
+		strcpy(bitmapPool[i].name, "\0");
 	}
 	
 }
@@ -995,6 +1370,7 @@ void freeData(){
 				free(del);
 				del = NULL;
 			}
+			strcpy(listPool[i].name, "\0");
 			free(listPool[i].item);
 			listPool[i].item = NULL;
 		}
@@ -1014,6 +1390,12 @@ void freeData(){
 			free(hashPool[i].item);
 			hashPool[i].item = NULL;
 
+		}
+
+		if(bitmapPool[i].item){
+			bitmap_destroy(bitmapPool[i].item);
+			bitmapPool[i].item = NULL;
+			strcpy(bitmapPool[i].name, "\0");
 		}
 	}
 }
