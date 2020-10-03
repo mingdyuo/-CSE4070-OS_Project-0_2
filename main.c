@@ -52,7 +52,7 @@ char* functionNameList[] = {
 };
 
 FUNCTION getFunction(char* functionName){
-	for(int i=0;i<18;i++){
+	for(int i=0;i<42;i++){
 		if(!strcmp(functionName, functionNameList[i])) return i;
 	}
 	return -1;
@@ -63,7 +63,6 @@ FUNCTION getFunction(char* functionName){
 int getEmptyList(){
 	for(int i=0;i<MAX_ELEMENT;i++){
 		if(!listPool[i].item) {
-			listPool[i].item = (struct list*)malloc(sizeof(struct list));
 			return i;
 		}
 	}
@@ -144,24 +143,27 @@ int getMatchingHash(char* name){
 	return -1;
 }
 
-void func_list_front(char* commandLine){
-	if(!getNameOnly(commandLine)) return;
+void func_list_front(char* name){
+	if(!getNameOnly(name)) return;
 	
-	int listIndex = getMatchingList(commandLine); 
+	int listIndex = getMatchingList(name); 
 	if(listIndex < 0) return;
 	
+	if(list_empty(listPool[listIndex].item)) return;
+
 	struct list_elem* e = list_front(listPool[listIndex].item);
 	struct list_item *temp = list_entry(e, struct list_item, elem);
-// 비엇을 때 되는지 확인해야함  근데 예시로 안들어올듯
 	printf("%d\n", temp->data);
 	
 }
 
-void func_list_back(char* commandLine){
-	if(!getNameOnly(commandLine)) return;
+void func_list_back(char* name){
+	if(!getNameOnly(name)) return;
 
-	int listIndex = getMatchingList(commandLine);
+	int listIndex = getMatchingList(name);
 	if(listIndex < 0) return;
+
+	if(list_empty(listPool[listIndex].item)) return;
 
 	struct list_elem* e = list_back(listPool[listIndex].item);
 	struct list_item *temp = list_entry(e, struct list_item, elem);
@@ -215,10 +217,10 @@ void func_list_push_back(char* commandLine){
 
 }
 
-void func_list_pop_front(char* commandLine){
-	if(!getNameOnly(commandLine)) return;
+void func_list_pop_front(char* name){
+	if(!getNameOnly(name)) return;
 
-	int listIndex = getMatchingList(commandLine);
+	int listIndex = getMatchingList(name);
 	if(listIndex < 0) return;
 
 	struct list_elem* e = list_pop_front(listPool[listIndex].item);
@@ -228,10 +230,10 @@ void func_list_pop_front(char* commandLine){
 	del = NULL;
 }
 
-void func_list_pop_back(char* commandLine){
-	if(!getNameOnly(commandLine)) return;
+void func_list_pop_back(char* name){
+	if(!getNameOnly(name)) return;
 
-	int listIndex = getMatchingList(commandLine);
+	int listIndex = getMatchingList(name);
 	if(listIndex < 0) return;
 
 	struct list_elem* e = list_pop_back(listPool[listIndex].item);
@@ -289,13 +291,13 @@ void func_list_insert_ordered(char* commandLine){
 	struct list_item* new_item = (struct list_item*)malloc(sizeof(struct list_item));
 	new_item->data = value;
 	
-	list_insert_ordered(listPool[listIndex].item, &(new_item->elem), my_list_less_func, 0);
+	list_insert_ordered(listPool[listIndex].item, &(new_item->elem), my_list_less_func, NULL);
 }
 
-void func_list_empty(char* commandLine){
-	if(!getNameOnly(commandLine)) return;
+void func_list_empty(char* name){
+	if(!getNameOnly(name)) return;
 
-	int listIndex = getMatchingList(commandLine);
+	int listIndex = getMatchingList(name);
 	if(listIndex < 0) return;
 	
 	if(list_empty(listPool[listIndex].item)) 
@@ -304,20 +306,20 @@ void func_list_empty(char* commandLine){
 		printf("false\n");
 }
 
-void func_list_size(char* commandLine){
-	if(!getNameOnly(commandLine)) return;
+void func_list_size(char* name){
+	if(!getNameOnly(name)) return;
 
-	int listIndex = getMatchingList(commandLine);
+	int listIndex = getMatchingList(name);
 	if(listIndex < 0) return;
 	
 	size_t listSize = list_size(listPool[listIndex].item);
-	printf("%ld\n",listSize);
+	printf("%zu\n",listSize);
 }
 
-void func_list_max(char* commandLine){
-	if(!getNameOnly(commandLine)) return;
+void func_list_max(char* name){
+	if(!getNameOnly(name)) return;
 
-	int listIndex = getMatchingList(commandLine);
+	int listIndex = getMatchingList(name);
 	if(listIndex < 0) return;
 
 	struct list_elem* e = list_max(listPool[listIndex].item, my_list_less_func, NULL);
@@ -325,10 +327,10 @@ void func_list_max(char* commandLine){
 	printf("%d\n", item->data);
 }
 
-void func_list_min(char* commandLine){
-	if(!getNameOnly(commandLine)) return;
+void func_list_min(char* name){
+	if(!getNameOnly(name)) return;
 
-	int listIndex = getMatchingList(commandLine);
+	int listIndex = getMatchingList(name);
 	if(listIndex < 0) return;
 
 	struct list_elem* e = list_min(listPool[listIndex].item, my_list_less_func, NULL);
@@ -361,20 +363,20 @@ void func_list_remove(char* commandLine){
 	del = NULL;
 }
 
-void func_list_reverse(char* commandLine){
-	if(!getNameOnly(commandLine)) return;
+void func_list_reverse(char* name){
+	if(!getNameOnly(name)) return;
 
-	int listIndex = getMatchingList(commandLine);
+	int listIndex = getMatchingList(name);
 	if(listIndex < 0) return;
 	
 	list_reverse(listPool[listIndex].item);
 
 }
 
-void func_list_sort(char* commandLine){
-	if(!getNameOnly(commandLine)) return;
+void func_list_sort(char* name){
+	if(!getNameOnly(name)) return;
 
-	int listIndex = getMatchingList(commandLine);
+	int listIndex = getMatchingList(name);
 	if(listIndex < 0) return;
 	
 	list_sort(listPool[listIndex].item, my_list_less_func, 0);
@@ -459,10 +461,10 @@ void func_list_unique(char* commandLine){
 }
 
 
-void func_list_shuffle(char* commandLine){
-	if(!getNameOnly(commandLine)) return;
+void func_list_shuffle(char* name){
+	if(!getNameOnly(name)) return;
 
-	int index = getMatchingList(commandLine);
+	int index = getMatchingList(name);
 
 	list_shuffle(listPool[index].item);
 
@@ -474,19 +476,148 @@ void func_hash_insert(char* commandLine){
 
 	char name[50], buffer[50];
 	int argc = sscanf(commandLine, "%s %d %s", name, &value, buffer);
-	
+
 	if(argc>2){
 		printf("ERROR : TOO MUCH ARGUMENT.\n");
 		return;
 	}
-	
+
 	int index = getMatchingHash(name);
-	if(index > -1) return;
+	if(index < 0) return;
 
 	struct hash_item* new_item = (struct hash_item*)malloc(sizeof(struct hash_item));
 	new_item->data = value;
 	hash_insert(hashPool[index].item, &(new_item->elem));
 
+}
+
+void func_hash_apply(char* commandLine){
+	fgets(commandLine, MAX_CMD_LINE, stdin);
+
+	char name[50], apply[50], buffer[50];
+	int argc = sscanf(commandLine, "%s %s %s", name, apply, buffer);
+
+	if(argc != 2){
+		printf("ERROR : ARGUMENT NOT MATCHED\n");
+		return;
+	}
+
+	int index = getMatchingHash(name);
+	if(index < 0) return;
+
+	if(!strcmp(apply, "square")){
+		hash_apply(hashPool[index].item, square_func);
+	}
+	else if(!strcmp(apply, "triple")){
+		hash_apply(hashPool[index].item, triple_func);
+	}	
+
+}
+
+void func_hash_delete(char* commandLine){
+	fgets(commandLine, MAX_CMD_LINE, stdin);
+
+	char name[50], buffer[50];
+	int value;
+	int argc = sscanf(commandLine, "%s %d %s", name, &value, buffer);
+
+	if(argc != 2){
+		printf("ERROR : ARGUMENT NOT MATCHED\n");
+		return;
+	}
+
+	int index = getMatchingHash(name);
+	if(index < 0) return;
+	
+	struct hash_item i;
+	i.data = value;
+
+	struct hash_elem* target = hash_find(hashPool[index].item, &(i.elem));
+	if(target) {
+		struct hash_item* del = hash_entry(target, struct hash_item, elem);
+		hash_delete(hashPool[index].item, target);
+		free(del);
+	}
+
+}
+
+void func_hash_empty(char* name){
+	if(!getNameOnly(name)) return;
+
+	int index = getMatchingHash(name);
+	if(index < 0) return;
+
+	if(hash_empty(hashPool[index].item)) printf("true\n");
+	else printf("false\n");
+
+}
+
+void func_hash_size(char* name){
+	if(!getNameOnly(name)) return;
+
+	int index = getMatchingHash(name);
+	if(index < 0) return;
+
+	fprintf(stdout, "%zu\n", hash_size(hashPool[index].item));
+
+}
+
+void func_hash_clear(char* name){
+	if(!getNameOnly(name)) return;
+
+	int index = getMatchingHash(name);
+	if(index < 0) return;
+
+	hash_clear(hashPool[index].item, dealloc_func);
+
+}
+
+void func_hash_find(char* commandLine){
+	fgets(commandLine, MAX_CMD_LINE, stdin);
+
+	char name[50], buffer[50];
+	int value;
+	int argc = sscanf(commandLine, "%s %d %s", name, &value, buffer);
+
+	if(argc != 2){
+		printf("ERROR : ARGUMENT NOT MATCHED\n");
+		return;
+	}
+
+	int index = getMatchingHash(name);
+	if(index < 0) return;
+	
+	struct hash_item i;
+	i.data = value;
+
+	struct hash_elem* target = hash_find(hashPool[index].item, &(i.elem));
+	if(target){
+		struct hash_item* item = hash_entry(target, struct hash_item, elem);
+		fprintf(stdout, "%d ", item->data);
+	}
+}
+
+void func_hash_replace(char* commandLine){
+	fgets(commandLine, MAX_CMD_LINE, stdin);
+
+	char name[50], buffer[50];
+	int value;
+	int argc = sscanf(commandLine, "%s %d %s", name, &value, buffer);
+
+	if(argc != 2){
+		printf("ERROR : ARGUMENT NOT MATCHED\n");
+		return;
+	}
+
+	int index = getMatchingHash(name);
+	if(index < 0) return;
+	
+	struct hash_item* new_item = (struct hash_item*)malloc(sizeof(struct hash_item));
+	new_item->data = value;
+	
+	struct hash_elem* old = hash_replace(hashPool[index].item, &(new_item->elem));
+	struct hash_item* del = hash_entry(old, struct hash_item, elem);
+	free(del);
 }
 
 void execute(char* commandLine){
@@ -557,25 +688,25 @@ void execute(char* commandLine){
 			func_hash_insert(commandLine);
 			break;
 		case HASH_APPLY:
-			
+			func_hash_apply(commandLine);
 			break;
 		case HASH_DELETE:
-
+			func_hash_delete(commandLine);
 			break;
 		case HASH_EMPTY:
-
+			func_hash_empty(commandLine);
 			break;
 		case HASH_SIZE:
-
+			func_hash_size(commandLine);
 			break;
 		case HASH_CLEAR:
-
+			func_hash_clear(commandLine);
 			break;
 		case HASH_FIND:
-			
+			func_hash_find(commandLine);
 			break;
 		case HASH_REPLACE:
-
+			func_hash_replace(commandLine);
 			break;
 		/* BITMAP COMMANDS */
 		case BITMAP_MARK:
@@ -635,12 +766,12 @@ void execute(char* commandLine){
 
 int getEmptyHash(){
 	for(int i=0; i<MAX_ELEMENT;i++)
-		if(!hashPool[i]) return i;
+		if(!hashPool[i].item) return i;
 	return -1;
 }
 
 void createHash(char* name){
-	int hashIndex = getEmptyList();
+	int hashIndex = getEmptyHash();
 	if(hashIndex<0) return;
 	
 	strcpy(hashPool[hashIndex].name, name);
@@ -732,20 +863,18 @@ int deleteHash(char* name){
 			break;
 		}
 	}
-
 	if(index>=0){
-		strcpy(hashPool[index].name, "\0");
-// TODO : 여기 해야 함!!!
-		/*
-		struct list_elem* e = list_begin(listPool[index].item);
-		while(e != list_end(listPool[index].item)){
-			struct list_item* del = list_entry(e, struct list_item, elem);
-			e = list_remove(e);
-			free(del);
-			del = NULL;
-		}
-		*/
+		struct hash* hashPtr = hashPool[index].item;
+		struct hash_iterator iter;
 		
+		for(hash_first(&iter, hashPtr), hash_next(&iter);;){
+			if(!hash_cur(&iter)) break;
+			struct hash_elem* e = hash_delete(hashPtr, hash_cur(&iter));
+			struct hash_item* del = hash_entry(e, struct hash_item, elem);
+			hash_next(&iter);
+			free(del);
+		}
+		strcpy(hashPool[index].name, "\0");
 		free(hashPool[index].item);
 		hashPool[index].item = NULL;
 	}
@@ -762,7 +891,6 @@ void delete(char* commandLine){
 	if(argc > 1){
 		printf("ERROR : TOO MUCH ARGUMENT. JUST TYPE THE NAME WITHOUT WHITSPACE\n");
 		return;
-		free(hashPool[i].item);
 	}
 
 	if(deleteList(name)>-1) return;
@@ -794,8 +922,20 @@ void dumpdata(char* commandLine){
 			printf("\n");
 		return;
 	}
-
 	// 해시에서 탐색
+	index = getMatchingHash(commandLine);
+	if(index>-1){
+		struct hash* hashPtr = hashPool[index].item;
+		struct hash_iterator iter;
+		hash_first(&iter, hashPtr);
+
+		while(hash_next(&iter)){
+			struct hash_item* item = hash_entry(hash_cur(&iter), struct hash_item, elem);
+			fprintf(stdout, "%d ", item->data);
+			hasData = true;
+		}
+		if(hasData) fprintf(stdout, "\n");
+	}
 
 	// 비트맵에서 탐색
 	
@@ -807,7 +947,6 @@ void parser(){
 	while(true){
 		COMMAND command = getCommand(commandLine);
 		//getchar();
-
 		switch(command){
 			case CREATE:
 				getchar();
@@ -860,10 +999,21 @@ void freeData(){
 			listPool[i].item = NULL;
 		}
 
-		if(hashPool[i]){
-			// TODO : free hashPool;
+		if(hashPool[i].item){
+			struct hash* hashPtr = hashPool[i].item;
+			struct hash_iterator iter;
+			
+			for(hash_first(&iter, hashPtr), hash_next(&iter);;){
+				if(!hash_cur(&iter)) break;
+				struct hash_elem* e = hash_delete(hashPtr, hash_cur(&iter));
+				struct hash_item* del = hash_entry(e, struct hash_item, elem);
+				hash_next(&iter);
+				free(del);
+			}
+			strcpy(hashPool[i].name, "\0");
 			free(hashPool[i].item);
 			hashPool[i].item = NULL;
+
 		}
 	}
 }

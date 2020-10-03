@@ -25,7 +25,7 @@ static void rehash (struct hash *);
    compare hash elements using LESS, given auxiliary data AUX. */
 bool
 hash_init (struct hash *h,
-           hash_hash_func *hash, hash_less_func *less, void *aux) 
+           hash_hash_func *hash, hash_less_func *less, void *aux)
 {
   h->elem_cnt = 0;
   h->bucket_cnt = 4;
@@ -435,9 +435,7 @@ remove_elem (struct hash *h, struct hash_elem *e)
 unsigned my_hash_func(const struct hash_elem* e, void* aux){
 	struct hash_item* i = hash_entry(e, struct hash_item, elem);
 	
-	float num = (i->data < 0)? -(i->data):i->data;
-	float temp = num * 0.6180339f;
-	return (unsigned)temp;
+	return hash_int(i->data);
 
 }
 
@@ -454,4 +452,23 @@ bool my_hash_less_func (const struct hash_elem *a,
 void my_hash_action_func(struct hash_elem *e, void *aux){
 
 
+}
+
+void aux_func(){
+	return;
+}
+
+void square_func (struct hash_elem *e, void *aux){
+	struct hash_item* i = hash_entry(e, struct hash_item, elem);
+	i->data *= i->data;
+}
+
+void triple_func (struct hash_elem *e, void *aux){
+	struct hash_item* i = hash_entry(e, struct hash_item, elem);
+	i->data *= (i->data * i->data);
+}
+
+void dealloc_func (struct hash_elem *e, void *aux){
+	struct hash_item* del = hash_entry(e, struct hash_item, elem);
+	free(del);
 }

@@ -24,7 +24,6 @@
 #include <stddef.h>
 #include <stdint.h>
 #include "list.h"
-#include "common.h"
 
 #define MAX_HASH_NAME 50
 
@@ -46,7 +45,7 @@ struct namedHash
 {
 	struct hash* item;
 	char name[MAX_HASH_NAME];
-}
+};
 /* Converts pointer to hash element HASH_ELEM into a pointer to
    the structure that HASH_ELEM is embedded inside.  Supply the
    name of the outer structure STRUCT and the member name MEMBER
@@ -122,6 +121,11 @@ bool my_hash_less_func (const struct hash_elem *a,
 						const struct hash_elem *b,
 						void *aux);
 void my_hash_action_func(struct hash_elem *e, void *aux);
+void aux_func();
 
+void square_func (struct hash_elem *e, void *aux);
+void triple_func (struct hash_elem *e, void *aux);
+
+void dealloc_func (struct hash_elem *e, void *aux);
 
 #endif /* lib/kernel/hash.h */
