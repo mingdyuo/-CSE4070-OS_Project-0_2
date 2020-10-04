@@ -120,8 +120,7 @@ unsigned my_hash_func(const struct hash_elem* e, void* aux);
 bool my_hash_less_func (const struct hash_elem *a,
 						const struct hash_elem *b,
 						void *aux);
-void my_hash_action_func(struct hash_elem *e, void *aux);
-void aux_func();
+unsigned hash_int_2(int i);
 
 void square_func (struct hash_elem *e, void *aux);
 void triple_func (struct hash_elem *e, void *aux);

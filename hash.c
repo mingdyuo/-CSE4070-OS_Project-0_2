@@ -8,6 +8,8 @@
 #include "hash.h"
 #include <assert.h>	// Instead of 	#include "../debug.h"
 #include <stdlib.h>	//		#include "threads/malloc.h"
+#include <math.h>
+
 
 #define ASSERT(CONDITION) assert(CONDITION)	// patched for proj0-2
 
@@ -449,14 +451,16 @@ bool my_hash_less_func (const struct hash_elem *a,
 	return e1->data < e2->data;
 }
 
-void my_hash_action_func(struct hash_elem *e, void *aux){
-
-
+unsigned hash_int_2(int i){
+     double temp = (sqrt(5) - 1) * pow(2, 31) / (double)pow(2, 32);
+ 
+     if(temp<0 || temp>1) return -1;
+ 
+     unsigned hash_key = (i * temp - floor(i * temp)) * 4;
+ 
+     return hash_key;
 }
 
-void aux_func(){
-	return;
-}
 
 void square_func (struct hash_elem *e, void *aux){
 	struct hash_item* i = hash_entry(e, struct hash_item, elem);

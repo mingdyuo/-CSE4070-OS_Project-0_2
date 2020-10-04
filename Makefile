@@ -3,7 +3,7 @@ CFLAGS = -Wall
 TARGET = testlib
 
 $(TARGET) : list.o bitmap.o debug.o hash.o hex_dump.o main.o
-	$(CC) $(CFLAGS) -o $(TARGET) list.o bitmap.o debug.o hash.o hex_dump.o main.o
+	$(CC) $(CFLAGS) -o $(TARGET) list.o bitmap.o debug.o hash.o -lm hex_dump.o main.o
 
 main.o : main.c
 	$(CC) $(CFLAGS) -c -o main.o main.c

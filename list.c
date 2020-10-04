@@ -2,6 +2,7 @@
 #include <assert.h>	// Instead of	#include "../debug.h"
 #include <time.h>
 #include <stdlib.h>
+
 #define ASSERT(CONDITION) assert(CONDITION)	// patched for proj0-2
 
 /* Our doubly linked lists have two header elements: the "head"
@@ -541,14 +542,47 @@ list_min (struct list *list, list_less_func *less, void *aux)
 /* Returns none. Changes position of two node in a list */
 void list_swap(struct list_elem *a, struct list_elem *b)
 {
-	int temp;
-	struct list_item* item_a = list_entry(a, struct list_item, elem);
-	struct list_item* item_b = list_entry(b, struct list_item, elem);
-	
-	temp = item_a->data;
-	item_a->data = item_b->data;
-	item_b->data = temp;
+	struct list_elem* prev, *next;
 
+	if(a == b) return;
+	else if(a->next == b){
+		prev = a->prev;
+		next = b->next;
+
+		b->prev = prev;
+		a->next = next;
+		b->next = a;
+		a->prev = b;
+
+		prev->next = b;
+		next->prev = a;
+	}
+	else if(b->next == a){
+		prev = b->prev;
+		next = a->next;
+
+		a->prev = prev;
+		b->next = next;
+		a->next = b;
+		b->prev = a;
+		
+		prev->next = a;
+		next->prev = b;
+	}
+	else {
+		prev = a->prev;
+		next = a->next;
+
+		a->prev = b->prev;
+		a->next = b->next;
+		b->prev->next = a;
+		b->next->prev = a;
+
+		b->prev = prev;
+		b->next = next;
+		prev->next = b;
+		next->prev = b;
+	}
 }
 
 /* Returns none. Shuffles positions of nodes in a list randomly. */
@@ -558,15 +592,17 @@ void list_shuffle(struct list *list)
 	int rn;
 	size_t size = list_size(list);
 
-	struct list_elem* curr = list_begin(list);
 	for(int i=0; i<size-1;i++){
-		rn = rand() % (size - i) + i;
-		struct list_elem* target = list_begin(list);
-		for(int j=0;j<rn;j++)
+		struct list_elem* curr = list_begin(list);
+		for(int j=0; j<i;j++){
+			curr = curr->next;
+		}
+		rn = rand() % (size - i);
+		struct list_elem* target = curr;
+		for(int j=0;j<rn;j++){
 			target = target->next;
-		
+		}
 		list_swap(curr, target);
-		curr = curr->next;
 	}
 }
 
