@@ -14,12 +14,14 @@ The purpose of this project is to practice and get experienced with data structu
 2. list_shuffle
 3. hash_int_2
 4. bitmap_expand
->##### **Commands**
->##### Shared commands
->1. create [list/hash/bitmap] [name]
->2. dumpdata [name]
->3. delete [name]
->4. quit
+
+
+    ##### **Commands**
+    ##### Shared commands
+    1. create [list/hash/bitmap] [name]
+    2. dumpdata [name]
+    3. delete [name]
+    4. quit
 
 
 >##### List commands
