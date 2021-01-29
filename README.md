@@ -1,11 +1,11 @@
-## [Sogang Univ.] CSE4070 OS_Project
+## [Sogang Univ.] CSE4070 OS_Project #0_2
 
-### Project #0_2
+### Introduction
 The purpose of this project is to practice and get experienced with data structures used in PintOs such as "List", "Hash", and "Bitmap". Not as usual way, struct which has pointers, for previous and next item, doesn't have data. Instead, the struct with pointers is embedded in another struct which has data. So we have to get through one more process to access data in one element. To get used to these way, we made a program that get input commands and handle each data structures according to that commands. 
 
 <br>
 
-#### Usage
+### Usage
 
 ```
 $ cd src
@@ -15,14 +15,14 @@ $ ./testlib
 
 <br>
 
-#### Assumptions
+### Assumptions
 - All inputs are from standard input (stdin).
 - All the types used in the program are integer.
 - The number of list, hash, bitmap is less than or equal to 10.
 
 <br>
 
-#### Functions to implement
+### Functions to implement
 * Share commands
 
   ```
@@ -91,6 +91,6 @@ $ ./testlib
 
 <br>
 
-#### More details
+### More details
 
 - Included in `document_20171487.docx`
