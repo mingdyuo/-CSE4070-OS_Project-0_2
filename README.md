@@ -23,7 +23,7 @@ $ ./testlib
 <br>
 
 ### Functions to implement
-* Share commands
+* Shared commands
 
   ```
   create [list/hash/bitmap] [name]
