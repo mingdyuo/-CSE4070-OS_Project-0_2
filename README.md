@@ -1,7 +1,8 @@
 ## [Sogang Univ.] CSE4070 OS_Project #0_2
 
 ### Introduction
-The purpose of this project is to practice and get experienced with data structures used in PintOs such as "List", "Hash", and "Bitmap". Not as usual way, struct which has pointers, for previous and next item, doesn't have data. Instead, the struct with pointers is embedded in another struct which has data. So we have to get through one more process to access data in one element. To get used to these way, we made a program that get input commands and handle each data structures according to that commands. 
+
+The purpose of this project is to practice and get experienced to the data structures in PintOs such as "List", "Hash", and "Bitmap". Not as usual way, the data structures which have pointers for previous and next item don't contain data. Instead, they are embedded in another structure which has actual data. So we have to get through one more process to access the data. To get used to this kind of the method, we've made a program that has commands to handle the new data structures. 
 
 <br>
 
@@ -16,13 +17,15 @@ $ ./testlib
 <br>
 
 ### Assumptions
-- All inputs are from standard input (stdin).
-- All the types used in the program are integer.
+
+- All inputs are standard input (stdin).
+- Only integer type is used in this program.
 - The number of list, hash, bitmap is less than or equal to 10.
 
 <br>
 
 ### Functions to implement
+
 * Shared commands
 
   ```
@@ -50,7 +53,7 @@ $ ./testlib
   list_remove [name] [index]
   list_reverse [name]
   list_sort [name]
-  list_splice [name1] [position(before)] [name2] [first] [last(exclusice)]
+  list_splice [name1] [position(before)] [name2] [first] [last(exclusive)]
   list_swap [name] [pos1] [pos2]
   list_shuffle [name]
   list_unique [name1] [name2]
